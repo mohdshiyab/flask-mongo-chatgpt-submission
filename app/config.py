@@ -12,5 +12,7 @@ class Config:
     FLASK_PORT = int(os.getenv("FLASK_PORT", 5001))
     FLASK_DEBUG = os.getenv("FLASK_DEBUG", "True").lower() in ("true", "1", "t")
     MOCK_OPENAI = os.getenv("MOCK_OPENAI", "False").lower() in ("true", "1", "t")
+    OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", None)
+
 
 
