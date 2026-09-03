@@ -25,7 +25,19 @@ def format_prompt(template: str, userinput: str) -> str:
 def _generate_mock_response(prompt: str) -> str:
     """Generate realistic expert response for testing/demo when OpenAI quota is exhausted."""
     prompt_lower = prompt.lower()
-    if "group 1" in prompt_lower:
+    user_query = prompt
+    if "Answer the following:" in prompt:
+        user_query = prompt.split("Answer the following:")[-1].strip()
+
+    if "mbbs" in prompt_lower or "medical" in prompt_lower:
+        return (
+            "To successfully pass your MBBS (Bachelor of Medicine, Bachelor of Surgery) examinations:\n\n"
+            "1. Minimum Passing Criteria: Under NMC (National Medical Commission) guidelines, you must score an aggregate of at least 50% in each subject (combining Theory and Practical/Clinical), with a minimum of 40% in Theory and Practical individually.\n"
+            "2. Regular Clinical Postings: Active participation in clinical case discussions and patient examinations is mandatory to clear practicals and vivas.\n"
+            "3. Revision Strategy: Use standard textbooks, practice high-yield clinical scenarios, and solve previous 5-10 years' university papers under exam conditions.\n\n"
+            "Consistent daily study and clinical correlation are the keys to clearing your MBBS profs!"
+        )
+    elif "group 1" in prompt_lower:
         return (
             "CA Final Group 1 comprises the following core papers under the ICAI scheme:\n\n"
             "1. Paper 1: Financial Reporting (FR)\n"
@@ -33,12 +45,11 @@ def _generate_mock_response(prompt: str) -> str:
             "3. Paper 3: Advanced Auditing, Assurance and Professional Ethics\n\n"
             "Each paper is conducted for 100 marks with a duration of 3 hours."
         )
-
-    elif "aggregate" in prompt_lower:
+    elif "aggregate" in prompt_lower and "ca" in prompt_lower:
         return (
             "The CA Exam Aggregate Rule requires candidates to score an overall average of at least 50% across all papers in the group (e.g., 150/300 or 200/400), in addition to scoring at least 40% in each individual subject."
         )
-    elif "score" in prompt_lower or "pass" in prompt_lower or "ca final" in prompt_lower:
+    elif "ca final" in prompt_lower or ("ca" in prompt_lower and ("score" in prompt_lower or "pass" in prompt_lower)):
         return (
             "To pass the CA Final Examination conducted by ICAI, you must satisfy two criteria simultaneously:\n\n"
             "1. Minimum Subject-wise Score: You must obtain at least 40% marks in each individual paper (minimum 40 out of 100 marks per subject).\n"
@@ -48,10 +59,15 @@ def _generate_mock_response(prompt: str) -> str:
         )
     else:
         return (
-            f"As an expert in the education domain, here is the answer to your inquiry:\n\n"
-            f"Regarding: '{prompt}'\n\n"
-            f"Academic success requires conceptual understanding, disciplined study habits, and consistent practice with past papers."
+            f"As an expert in the education domain, here is guidance regarding your inquiry:\n\n"
+            f"Regarding: \"{user_query}\"\n\n"
+            "Key recommendations for academic success:\n"
+            "1. Master the core syllabus and focus on high-weightage topics first.\n"
+            "2. Practice past 5 years' university/board question papers under timed exam conditions.\n"
+            "3. Maintain scheduled revision intervals using spaced repetition.\n"
+            "4. Seek regular clarification from mentors and evaluate your performance through mock assessments."
         )
+
 
 
 
