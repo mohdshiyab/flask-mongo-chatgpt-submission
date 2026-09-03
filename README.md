@@ -8,8 +8,7 @@ A clean, modular Python & Flask REST API integrated with MongoDB and OpenAI's Ch
 
 ---
 
-## Live Demo : 
-- **https://flask-mongo-chatgpt-submission-theta.vercel.app/
+## Live Demo : https://flask-mongo-chatgpt-submission-theta.vercel.app/
 
 ## Features
 
