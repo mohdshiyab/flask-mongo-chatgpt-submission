@@ -1,0 +1,19 @@
+# Environment variables (contains secret keys and database passwords)
+.env
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest cache
+.pytest_cache/
+
+# OS specific
+Thumbs.db
+.DS_Store

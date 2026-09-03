@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flask + MongoDB + ChatGPT Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0d1117;
+      --bg-card: #161b22;
+      --bg-card-hover: #1f242c;
+      --border-color: #30363d;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --primary: #238636;
+      --primary-hover: #2ea043;
+      --accent: #58a6ff;
+      --accent-purple: #bc8cff;
+      --danger: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 24px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .header-title h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-title p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .badges {
+      display: flex;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    .badge-flask { background: rgba(88, 166, 255, 0.1); color: var(--accent); border-color: rgba(88, 166, 255, 0.3); }
+    .badge-mongo { background: rgba(35, 134, 54, 0.1); color: #3fb950; border-color: rgba(63, 185, 80, 0.3); }
+    .badge-ai { background: rgba(188, 140, 255, 0.1); color: var(--accent-purple); border-color: rgba(188, 140, 255, 0.3); }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card-hover);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: #21262d;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-secondary {
+      background: #21262d;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+    .btn-secondary:hover { background: #30363d; }
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+    .btn-danger:hover { background: rgba(248, 81, 73, 0.1); }
+
+    .result-box {
+      margin-top: 20px;
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+    }
+    .result-header {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .result-content {
+      font-size: 14px;
+      white-space: pre-wrap;
+      color: #e6edf3;
+      line-height: 1.7;
+    }
+
+    .batch-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .batch-item input {
+      margin-bottom: 0;
+      flex: 1;
+    }
+
+    .history-card {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .history-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .history-prompt {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .history-response {
+      font-size: 13px;
+      color: #c9d1d9;
+      white-space: pre-wrap;
+      max-height: 150px;
+      overflow-y: auto;
+      background: #161b22;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .spinner {
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top: 2px solid #fff;
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-title">
+        <h1>ChatGPT + MongoDB Service</h1>
+        <p>Dynamic Prompt Template Substitution with Single & Async Batch Endpoints</p>
+      </div>
+      <div class="badges">
+        <span class="badge badge-flask">Flask 3</span>
+        <span class="badge badge-mongo">MongoDB Atlas</span>
+        <span class="badge badge-ai">OpenAI GPT</span>
+      </div>
+    </header>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('single')">Single Query (Step 1-5)</button>
+      <button class="tab-btn" onclick="switchTab('batch')">Async Batch (Step 6)</button>
+      <button class="tab-btn" onclick="switchTab('history')">MongoDB History (Step 4)</button>
+      <button class="tab-btn" onclick="switchTab('prompts')">Prompts (Step 2)</button>
+    </div>
+
+    <!-- Tab 1: Single Ask -->
+    <div id="tab-single" class="tab-content active">
+      <div class="card">
+        <div class="card-title">Single Prompt Request</div>
+        <div class="card-desc">
+          Fetches <code>Education_Prompt</code> from MongoDB, replaces <code>{{userinput}}</code>, calls ChatGPT, logs to <code>history</code> collection, and displays the response.
+        </div>
+
+        <label for="single-input">User Input:</label>
+        <textarea id="single-input" placeholder="Type your question...">How much should I score in each subject to pass CA final?</textarea>
+
+        <button class="btn" id="single-submit" onclick="submitSingle()">
+          <span>Submit Query (POST /api/ask)</span>
+        </button>
+
+        <div id="single-result-box" class="result-box" style="display: none;">
+          <div class="result-header">
+            <span>ChatGPT Response</span>
+            <span id="single-time" style="color: #3fb950;"></span>
+          </div>
+          <div id="single-response" class="result-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Batch Ask -->
+    <div id="tab-batch" class="tab-content">
+      <div class="card">
+        <div class="card-title">Asynchronous Batch Request (Step 6)</div>
+        <div class="card-desc">
+          Submits a list of strings in one request. All calls run concurrently in parallel via <code>asyncio</code> and are returned in the exact same order.
+        </div>
+
+        <label>Input Queries:</label>
+        <div id="batch-inputs-container">
+          <div class="batch-item">
+            <input type="text" class="batch-query" value="How much should I score in each subject to pass CA final?">
+            <button class="btn btn-danger" onclick="removeBatchItem(this)">Remove</button>
+          </div>
+          <div class="batch-item">
+            <input type="text" class="batch-query" value="What are the subjects in CA Final Group 1?">
+            <button class="btn btn-danger" onclick="removeBatchItem(this)">Remove</button>
+          </div>
+          <div class="batch-item">
+            <input type="text" class="batch-query" value="What is the aggregate passing percentage for CA exams?">
+            <button class="btn btn-danger" onclick="removeBatchItem(this)">Remove</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <button class="btn btn-secondary" onclick="addBatchItem()">+ Add Another Query</button>
+          <button class="btn" id="batch-submit" onclick="submitBatch()">
+            <span>Run Async Batch (POST /api/ask-batch)</span>
+          </button>
+        </div>
+
+        <div id="batch-result-box" class="result-box" style="display: none; margin-top: 24px;">
+          <div class="result-header">
+            <span>Ordered AI Responses</span>
+            <span id="batch-time" style="color: #3fb950;"></span>
+          </div>
+          <div id="batch-responses-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: History -->
+    <div id="tab-history" class="tab-content">
+      <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+          <span>MongoDB History Records</span>
+          <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadHistory()">Refresh History</button>
+        </div>
+        <div class="card-desc">
+          Live interactions stored in the MongoDB <code>history</code> collection.
+        </div>
+        <div id="history-container">
+          <p style="color: var(--text-muted);">Click "Refresh History" to load records...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Prompts -->
+    <div id="tab-prompts" class="tab-content">
+      <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+          <span>Prompt Templates in MongoDB</span>
+          <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="loadPrompts()">Refresh Prompts</button>
+        </div>
+        <div class="card-desc">
+          Templates currently stored in the MongoDB <code>prompts</code> collection.
+        </div>
+        <div id="prompts-container">
+          <p style="color: var(--text-muted);">Loading prompt templates...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+      if (tabId === 'history') loadHistory();
+      if (tabId === 'prompts') loadPrompts();
+    }
+
+    async function submitSingle() {
+      const btn = document.getElementById('single-submit');
+      const input = document.getElementById('single-input').value.trim();
+      const resultBox = document.getElementById('single-result-box');
+      const responseEl = document.getElementById('single-response');
+      const timeEl = document.getElementById('single-time');
+
+      if (!input) {
+        alert('Please enter a question.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Processing ChatGPT call...';
+      resultBox.style.display = 'block';
+      responseEl.textContent = 'Contacting MongoDB and OpenAI...';
+      timeEl.textContent = '';
+
+      const startTime = performance.now();
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userinput: input })
+        });
+        const data = await res.json();
+        const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+
+        if (res.ok) {
+          responseEl.textContent = data.response;
+          timeEl.textContent = `Completed in ${duration}s`;
+        } else {
+          responseEl.textContent = 'Error: ' + (data.error || 'Request failed');
+          timeEl.textContent = '';
+        }
+      } catch (err) {
+        responseEl.textContent = 'Network error: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Submit Query (POST /api/ask)</span>';
+      }
+    }
+
+    function addBatchItem() {
+      const container = document.getElementById('batch-inputs-container');
+      const div = document.createElement('div');
+      div.className = 'batch-item';
+      div.innerHTML = `
+        <input type="text" class="batch-query" placeholder="Enter question...">
+        <button class="btn btn-danger" onclick="removeBatchItem(this)">Remove</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeBatchItem(btn) {
+      const items = document.querySelectorAll('.batch-item');
+      if (items.length <= 1) {
+        alert('Keep at least one question.');
+        return;
+      }
+      btn.parentElement.remove();
+    }
+
+    async function submitBatch() {
+      const btn = document.getElementById('batch-submit');
+      const inputs = Array.from(document.querySelectorAll('.batch-query'))
+        .map(i => i.value.trim())
+        .filter(v => v.length > 0);
+
+      if (inputs.length === 0) {
+        alert('Please provide at least one query.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner"></span> Running ${inputs.length} queries asynchronously in parallel...`;
+      const resultBox = document.getElementById('batch-result-box');
+      const listEl = document.getElementById('batch-responses-list');
+      const timeEl = document.getElementById('batch-time');
+
+      resultBox.style.display = 'block';
+      listEl.innerHTML = '<p style="color: var(--text-muted);">Executing parallel OpenAI calls via asyncio...</p>';
+      timeEl.textContent = '';
+
+      const startTime = performance.now();
+      try {
+        const res = await fetch('/api/ask-batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userinputs: inputs })
+        });
+        const data = await res.json();
+        const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+
+        if (res.ok && data.responses) {
+          timeEl.textContent = `${data.responses.length} responses generated concurrently in ${duration}s`;
+          listEl.innerHTML = data.responses.map((resp, idx) => `
+            <div style="background: #161b22; border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; margin-bottom: 12px;">
+              <div style="font-weight: 600; font-size: 13px; color: var(--accent); margin-bottom: 6px;">
+                #${idx + 1}: ${inputs[idx]}
+              </div>
+              <div style="font-size: 13px; color: #e6edf3; white-space: pre-wrap; line-height: 1.6;">${resp}</div>
+            </div>
+          `).join('');
+        } else {
+          listEl.innerHTML = `<p style="color: var(--danger);">Error: ${data.error || 'Failed'}</p>`;
+        }
+      } catch (err) {
+        listEl.innerHTML = `<p style="color: var(--danger);">Network error: ${err.message}</p>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Run Async Batch (POST /api/ask-batch)</span>';
+      }
+    }
+
+    async function loadHistory() {
+      const container = document.getElementById('history-container');
+      container.innerHTML = '<p style="color: var(--text-muted);">Fetching history from MongoDB...</p>';
+      try {
+        const res = await fetch('/api/history?limit=30');
+        const data = await res.json();
+        if (data.history && data.history.length > 0) {
+          container.innerHTML = data.history.map(item => `
+            <div class="history-card">
+              <div class="history-meta">
+                <span>Prompt ID: <strong>${item.prompt_id || 'Education_Prompt'}</strong></span>
+                <span>${item.created_at ? new Date(item.created_at).toLocaleString() : ''}</span>
+              </div>
+              <div class="history-prompt">Q: ${item.userinput || ''}</div>
+              <div class="history-response">${item.response || ''}</div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<p style="color: var(--text-muted);">No history records found in MongoDB yet. Try asking a question!</p>';
+        }
+      } catch (err) {
+        container.innerHTML = `<p style="color: var(--danger);">Failed to load history: ${err.message}</p>`;
+      }
+    }
+
+    async function loadPrompts() {
+      const container = document.getElementById('prompts-container');
+      container.innerHTML = '<p style="color: var(--text-muted);">Fetching prompts from MongoDB...</p>';
+      try {
+        const res = await fetch('/api/prompts');
+        const data = await res.json();
+        if (data.prompts && data.prompts.length > 0) {
+          container.innerHTML = data.prompts.map(p => `
+            <div class="history-card">
+              <div class="history-meta">
+                <span>Template ID: <strong style="color: #3fb950;">${p._id}</strong></span>
+              </div>
+              <div style="font-family: 'Fira Code', monospace; font-size: 13px; color: #e6edf3; background: #161b22; padding: 12px; border-radius: 4px;">
+                ${p.template}
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = '<p style="color: var(--text-muted);">No prompts found.</p>';
+        }
+      } catch (err) {
+        container.innerHTML = `<p style="color: var(--danger);">Failed to load prompts: ${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
